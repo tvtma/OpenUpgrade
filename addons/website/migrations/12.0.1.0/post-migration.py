@@ -7,6 +7,8 @@ from psycopg2.extensions import AsIs
 
 from openupgradelib import openupgrade
 
+from odoo.osv.expression import OR
+
 
 def assign_theme(env):
     theme_category = env.ref('base.module_category_theme')
@@ -46,15 +48,24 @@ def fill_website_socials(cr):
 
 
 def sync_menu_views_pages_websites(env):
-    # Main menu and children must be website-agnostic
+    # Main menu, its children and unused website-specific root menus
+    # must be website-agnostic
+    all_websites = env["website"].search([])
     main_menu = env.ref('website.main_menu')
-    child_menus = env["website.menu"].search([
-        ("id", "child_of", main_menu.ids),
-        ("website_id", "!=", False),
-    ])
-    child_menus.write({"website_id": False})
+    wrongly_specific_menus = env["website.menu"].search(OR([
+        [
+            ("id", "child_of", main_menu.ids),
+            ("website_id", "!=", False),
+        ],
+        [
+            ("id", "not in", all_websites.mapped("menu_id").ids),
+            ("website_id", "!=", False),
+            ("parent_id", "=", False),
+        ]
+    ]))
+    wrongly_specific_menus.write({"website_id": False})
     # Duplicate the main menu for all websites
-    for website in env["website"].search([]):
+    for website in all_websites:
         website.copy_menu_hierarchy(main_menu)
     # Find views that were website-specified in pre stage
     old_metadata_col = openupgrade.get_legacy_name("bs4_migration_metadata")
@@ -163,10 +174,29 @@ def update_google_maps_api_key(env):
         website_ids = env['website'].search([('google_maps_api_key', '=', False)]).write({'google_maps_api_key': google_maps_api_key})
 
 
+def fill_website_auth_signup_uninvited(cr):
+    """Keep the free sign up of the database on its websites.
+
+    Up to 11.0 the database-wide parameter auth_signup.allow_uninvited lets
+    visitors sign up. From 12.0 each website has its own setting, which the
+    website reads before the parameter, and it defaults to 'On invitation':
+    /web/signup answered 404 and the login page lost its sign up link.
+    """
+    cr.execute(
+        """SELECT value FROM ir_config_parameter
+        WHERE key = 'auth_signup.allow_uninvited'"""
+    )
+    row = cr.fetchone()
+    if row and (row[0] or '').strip().lower() == 'true':
+        openupgrade.logged_query(
+            cr, "UPDATE website SET auth_signup_uninvited = 'b2c'")
+
+
 @openupgrade.migrate()
 def migrate(env, version):
     cr = env.cr
     assign_theme(env)
+    fill_website_auth_signup_uninvited(cr)
     fill_website_socials(cr)
     env['website.menu']._parent_store_compute()
     openupgrade.load_data(

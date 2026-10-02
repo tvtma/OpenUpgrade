@@ -7,6 +7,7 @@ renamed_modules = {
     'base_vat_autocomplete': 'partner_autocomplete',
     'mrp_repair': 'repair',
     'product_extended': 'mrp_bom_cost',
+    # OCA/account-budgeting
     # OCA/account-payment
     'account_payment_return_import_sepa_pain': (
         'account_payment_return_import_iso20022'
@@ -27,11 +28,15 @@ renamed_modules = {
     # erponline-enterprise
     'account_accountant': 'to_account_accountant',
     'account_asset': 'to_account_asset',
+    'account_budget': 'to_account_budget',
     'mrp_account': 'to_mrp_account',
+    'mrp_workorder': 'to_mrp_workorder',
     'quality': 'to_quality',
     'stock_barcode': 'to_stock_barcode',
     # OCA/server-brand
     'res_config_settings_enterprise_remove': 'remove_odoo_enterprise',
+    # OCA/server-tools
+    'attachment_base_synchronize': 'attachment_queue',
     # OCA/stock-logistics-workflow
     'stock_batch_picking': 'stock_picking_batch_extended',
     'stock_pack_operation_auto_fill': 'stock_move_line_auto_fill',
@@ -44,11 +49,24 @@ renamed_modules = {
 
     # tvtma
     'to_refesh_sale_order': 'to_refresh_sale_order',
+
+    # OCA/web
+    'web_advanced_filters': 'web_advanced_filter',
+    'web_tree_image': 'web_tree_image_tooltip',
+    # OCA/l10n-brazil
+    'l10n_br_account_payment': 'l10n_br_account_payment_order',
+    'l10n_br_account_product': 'l10n_br_fiscal',
+    'l10n_br_data_account_product': 'l10n_br_nfe_account'
 }
 
 merged_modules = {
     # Odoo
     'auth_crypt': 'base',
+    # Odoo: removed without a successor on our addons paths. Merging them into
+    # the module they extended lets the update remove their views, fields and
+    # access rights; tables and columns are kept.
+    'test_documentation_examples': 'base',
+    'website_forum_doc': 'website_forum',
     'account_cash_basis_base_account': 'account',
     'account_invoicing': 'account',
     'rating_project': 'project',
@@ -65,16 +83,20 @@ merged_modules = {
     # OCA/account-analytic
     # although model is defined in "analytic", logic is in "account"
     'account_analytic_distribution': 'account',
-    'account_asset_analytic': 'account_asset_management',
+    'account_analytic_asset': 'account_asset_management',
+    'account_asset_analytic': 'account_asset_management',  # (from <= v10)
     # OCA/account-financial-reporting
     'customer_activity_statement': 'partner_statement',
     'customer_outstanding_statement': 'partner_statement',
     # OCA/account-financial-tools
     'account_asset_depr_line_cancel': 'account_asset_management',
     'account_asset_disposal': 'account_asset_management',
+    'account_asset_management_xls': 'account_asset_management',
     'account_reversal': 'account',
     # OCA/e-commerce
     'website_sale_default_country': 'website_sale',
+    # OCA/edi
+    'base_business_document_import_stock': 'base_business_document_import',
     # OCA/event
     'event_registration_mass_mailing': 'mass_mailing_event',
     # OCA/hr
@@ -94,7 +116,6 @@ merged_modules = {
     # OCA/stock-logistics-warehouse
     'stock_putaway_product': 'stock',
     # OCA/web
-    'web_no_bubble': 'web',
     'web_sheet_full_width': 'web_responsive',
     # OCA/website
     'website_form_metadata': 'website_form',
@@ -107,11 +128,20 @@ merged_modules = {
     'to_sale_backdate_delivery': 'to_sale_backdate',
     'to_sale_backdate_timesheet': 'to_sale_backdate',
     'to_sale_backdate_website_quote': 'to_sale_backdate',
-    
+    'to_hr_holidays_multiple': 'hr_holidays',
+
     # joomla2odoo
     'to_multi_website': 'website',
     'to_multi_website_blog': 'website_blog',
     'to_multi_website_slide': 'website_slides',
+
+    # OCA/l10n-brazil
+    'l10n_br_account_banking_payment': 'l10n_br_account_payment_order',
+    'l10n_br_account_product_service': 'l10n_br_fiscal',
+    'l10n_br_data_account': 'l10n_br_fiscal',
+    'l10n_br_sale_product': 'l10n_br_sale',
+    'l10n_br_data_account_service': 'l10n_br_fiscal',
+    'l10n_br_zip_correios': 'l10n_br_zip',
 }
 
 # only used here for openupgrade_records analysis:
@@ -144,3 +174,13 @@ merged_models = {
     # Odoo
     'stock.location.path': 'stock.rule',
 }
+
+# Modules of merged_modules that are not merged into anything: they are
+# removed without a successor on our addons paths. The technical records they
+# own (record rules, scheduled and server actions, views, menus, mail
+# templates...) are deleted by the update even when they are noupdate: see
+# release_records_of_lost_modules in the pre-migration of base.
+lost_modules = [
+    'test_documentation_examples',
+    'website_forum_doc',
+]
